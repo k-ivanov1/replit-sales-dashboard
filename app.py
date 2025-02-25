@@ -1,7 +1,7 @@
-import streamlit as st
-import data_manager as dm
 import os
-os.system("pip install supabase")
+os.system("pip install --no-cache-dir supabase")
+
+import streamlit as st
 import data_manager as dm
 
 st.set_page_config(page_title="📦 Inventory Management", layout="wide")
