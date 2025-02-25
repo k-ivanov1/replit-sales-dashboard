@@ -1,129 +1,77 @@
-import pandas as pd
 import os
-from datetime import datetime
+from supabase import create_client
+import pandas as pd
 
-DATA_FILE = "data/sales.csv"
+# Supabase credentials (replace with your actual keys)
+SUPABASE_URL = "https://hqhwaopnbyjhhcixxoer.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxaHdhb3BuYnlqaGhjaXh4b2VyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA0ODgyNTksImV4cCI6MjA1NjA2NDI1OX0.LZuBIBlYXKbToF71Arh8P2_5fS8DUfifkAl4jurOmWg"
 
-def initialize_data_file():
-    """Create data file if it doesn't exist"""
-    if not os.path.exists('data'):
-        os.makedirs('data')
+# Initialize Supabase client
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-    if not os.path.exists(DATA_FILE):
-        df = pd.DataFrame(columns=[
-            'date_of_sale',
-            'product_name',
-            'size',
-            'type',
-            'sku',
-            'customer_name',
-            'order_number',
-            'batch_number',
-            'best_before',
-            'production_date',
-            'quantity',
-            'price_per_unit',
-            'total_price',
-            'delivery_method',
-            'labelling_match',
-            'checked_by'
-        ])
-        df.to_csv(DATA_FILE, index=False)
+### STOCK OUT (SALES ORDERS) ###
 
-def load_data():
-    """Load data from CSV file"""
-    initialize_data_file()
-    df = pd.read_csv(DATA_FILE)
+def get_stock_out():
+    """Fetch all stock-out (sales) records from Supabase."""
+    response = supabase.table("stock_out").select("*").execute()
+    return pd.DataFrame(response.data) if response.data else pd.DataFrame()
 
-    # Convert date columns
-    date_columns = ['date_of_sale', 'best_before', 'production_date']
-    for col in date_columns:
-        df[col] = pd.to_datetime(df[col]).dt.date
+def add_stock_out(order_data):
+    """Insert new sales (stock-out) record into Supabase."""
+    response = supabase.table("stock_out").insert(order_data).execute()
+    return response
 
-    return df
+def delete_stock_out(order_id):
+    """Delete a stock-out entry by ID."""
+    supabase.table("stock_out").delete().eq("id", order_id).execute()
 
-def add_products_to_order(order_data, products_data):
-    """Add multiple products to an order"""
-    df = load_data()
 
-    new_records = []
-    for product in products_data:
-        record = {
-            'date_of_sale': order_data['date_of_sale'],
-            'product_name': product['product_name'],
-            'size': product['size'],
-            'type': product['type'],
-            'sku': product['sku'],
-            'customer_name': order_data['customer_name'],
-            'order_number': order_data['order_number'],
-            'batch_number': product['batch_number'],
-            'best_before': product['best_before'],
-            'production_date': product['production_date'],
-            'quantity': product['quantity'],
-            'price_per_unit': product['price_per_unit'],
-            'total_price': product['quantity'] * product['price_per_unit'],
-            'delivery_method': order_data['delivery_method'],
-            'labelling_match': product['labelling_match'],
-            'checked_by': product['checked_by']
-        }
-        new_records.append(record)
+### STOCK IN (TEA & OTHER PRODUCTS) ###
 
-    new_df = pd.DataFrame(new_records)
-    df = pd.concat([df, new_df], ignore_index=True)
-    df.to_csv(DATA_FILE, index=False)
+def get_stock_in():
+    """Fetch all stock-in entries from Supabase."""
+    response = supabase.table("stock_in").select("*").execute()
+    return pd.DataFrame(response.data) if response.data else pd.DataFrame()
 
-def get_orders_summary():
-    """Get summary of orders with their products"""
-    df = load_data()
-    return df.groupby('order_number').agg({
-        'date_of_sale': 'first',
-        'customer_name': 'first',
-        'product_name': lambda x: ', '.join(x),
-        'quantity': 'sum',
-        'total_price': 'sum',
-        'delivery_method': 'first'
-    }).reset_index()
+def add_stock_in(stock_data):
+    """Insert new stock-in record into Supabase."""
+    response = supabase.table("stock_in").insert(stock_data).execute()
+    return response
 
-def get_order_details(order_number):
-    """Get all products in a specific order"""
-    df = load_data()
-    return df[df['order_number'] == order_number]
+def delete_stock_in(stock_id):
+    """Delete a stock-in entry by ID."""
+    supabase.table("stock_in").delete().eq("id", stock_id).execute()
 
-def delete_order(order_number):
-    """Delete an entire order and its products"""
-    df = load_data()
-    df = df[df['order_number'] != order_number]
-    df.to_csv(DATA_FILE, index=False)
 
-def update_order(order_number, order_data, products_data):
-    """Update an existing order with new data"""
-    df = load_data()
-    # Remove existing order
-    df = df[df['order_number'] != order_number]
+### WASTAGE TRACKING ###
 
-    # Add updated order data
-    new_records = []
-    for product in products_data:
-        record = {
-            'date_of_sale': order_data['date_of_sale'],
-            'product_name': product['product_name'],
-            'size': product['size'],
-            'type': product['type'],
-            'sku': product['sku'],
-            'customer_name': order_data['customer_name'],
-            'order_number': order_number,
-            'batch_number': product['batch_number'],
-            'best_before': product['best_before'],
-            'production_date': product['production_date'],
-            'quantity': product['quantity'],
-            'price_per_unit': product['price_per_unit'],
-            'total_price': product['quantity'] * product['price_per_unit'],
-            'delivery_method': order_data['delivery_method'],
-            'labelling_match': product['labelling_match'],
-            'checked_by': product['checked_by']
-        }
-        new_records.append(record)
+def get_wastage():
+    """Fetch all wastage records from Supabase."""
+    response = supabase.table("wastage").select("*").execute()
+    return pd.DataFrame(response.data) if response.data else pd.DataFrame()
 
-    new_df = pd.DataFrame(new_records)
-    df = pd.concat([df, new_df], ignore_index=True)
-    df.to_csv(DATA_FILE, index=False)
+def add_wastage(wastage_data):
+    """Insert new wastage record into Supabase."""
+    response = supabase.table("wastage").insert(wastage_data).execute()
+    return response
+
+def delete_wastage(wastage_id):
+    """Delete a wastage entry by ID."""
+    supabase.table("wastage").delete().eq("id", wastage_id).execute()
+
+
+### PRODUCTS & RECIPES ###
+
+def get_products():
+    """Fetch all product details from Supabase."""
+    response = supabase.table("products").select("*").execute()
+    return pd.DataFrame(response.data) if response.data else pd.DataFrame()
+
+def add_product(product_data):
+    """Insert a new product into Supabase."""
+    response = supabase.table("products").insert(product_data).execute()
+    return response
+
+def delete_product(product_id):
+    """Delete a product by ID."""
+    supabase.table("products").delete().eq("id", product_id).execute()
