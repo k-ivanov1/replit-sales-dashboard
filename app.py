@@ -230,22 +230,31 @@ def main():
             st.rerun()
         
         # Additional info
-        st.markdown("---")
-        st.markdown("### System Info")
-        products_count = len(dm.get_products())
-        orders_count = len(dm.get_stock_out().drop_duplicates('order_number'))
-        st.markdown(f"🏷️ **Products**: {products_count}")
-        st.markdown(f"🛒 **Orders**: {orders_count}")
-        
-        st.markdown("---")
-        st.markdown("### Quick Actions")
-        if st.button("🔄 Refresh Data", use_container_width=True):
-            st.session_state.data_changed = True
-            add_notification("Data refreshed", "info")
-            st.rerun()
+st.markdown("---")
+st.markdown("### System Info")
+try:
+    products_count = len(dm.get_products())
+except Exception as e:
+    products_count = 0
+    print(f"Error loading products: {str(e)}")
 
-    # Display notifications at the top
-    show_notifications()
+try:
+    orders_count = len(dm.get_stock_out().drop_duplicates('order_number'))
+except Exception as e:
+    orders_count = 0
+    print(f"Error loading orders: {str(e)}")
+
+st.markdown(f"🏷️ **Products**: {products_count}")
+st.markdown(f"🛒 **Orders**: {orders_count}")
+
+st.markdown("---")
+st.markdown("### Quick Actions")
+if st.button("🔄 Refresh Data", use_container_width=True):
+    st.session_state.data_changed = True
+    add_notification("Data refreshed", "info")
+    st.rerun()
+# Display notifications at the top
+show_notifications()
     
     # Main content area based on active tab
     if st.session_state.active_tab == "dashboard":
