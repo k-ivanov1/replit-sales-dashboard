@@ -738,7 +738,7 @@ def show_stock_in_form():
         
         col1, col2, col3 = st.columns(3)
         with col1:
-product_free_from_damage = st.radio("🔍 Product Free from Damage?", ["Yes", "No"])
+            product_free_from_damage = st.radio("🔍 Product Free from Damage?", ["Yes", "No"])
         with col2:
             labelling_match = st.radio("📋 Labelling Match?", ["Yes", "No"])
         with col3:
