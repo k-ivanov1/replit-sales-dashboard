@@ -230,31 +230,47 @@ def main():
             st.rerun()
         
         # Additional info
-st.markdown("---")
-st.markdown("### System Info")
-try:
-    products_count = len(dm.get_products())
-except Exception as e:
-    products_count = 0
-    print(f"Error loading products: {str(e)}")
+        st.markdown("---")
+        st.markdown("### System Info")
+        try:
+            products_count = len(dm.get_products())
+        except Exception as e:
+            products_count = 0
+            print(f"Error loading products: {str(e)}")
 
-try:
-    orders_count = len(dm.get_stock_out().drop_duplicates('order_number'))
-except Exception as e:
-    orders_count = 0
-    print(f"Error loading orders: {str(e)}")
+        try:
+            orders_count = len(dm.get_stock_out().drop_duplicates('order_number'))
+        except Exception as e:
+            orders_count = 0
+            print(f"Error loading orders: {str(e)}")
 
-st.markdown(f"🏷️ **Products**: {products_count}")
-st.markdown(f"🛒 **Orders**: {orders_count}")
+        st.markdown(f"🏷️ **Products**: {products_count}")
+        st.markdown(f"🛒 **Orders**: {orders_count}")
+        
+        st.markdown("---")
+        st.markdown("### Quick Actions")
+        if st.button("🔄 Refresh Data", use_container_width=True):
+            st.session_state.data_changed = True
+            add_notification("Data refreshed", "info")
+            st.rerun()
 
-st.markdown("---")
-st.markdown("### Quick Actions")
-if st.button("🔄 Refresh Data", use_container_width=True):
-    st.session_state.data_changed = True
-    add_notification("Data refreshed", "info")
-    st.rerun()
-# Display notifications at the top
-show_notifications()
+    # Display notifications at the top
+    show_notifications()
+    
+    # Main content area based on active tab
+    if st.session_state.active_tab == "dashboard":
+        show_dashboard()
+    elif st.session_state.active_tab == "sales_entry":
+        if st.session_state.editing_order:
+            show_edit_form()
+        else:
+            show_data_entry_form()
+    elif st.session_state.active_tab == "stock":
+        show_stock_management()
+    elif st.session_state.active_tab == "search":
+        show_search_page()
+    else:
+        show_dashboard()  # Default view
     
     # Main content area based on active tab
     if st.session_state.active_tab == "dashboard":
