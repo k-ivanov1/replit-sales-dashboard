@@ -1479,4 +1479,23 @@ def show_dashboard():
             col1, col2, col3, col4 = st.columns([3, 2, 2, 1])
             
             with col1:
-                st.markdown(f"
+                st.markdown(f"**Order:** {order['order_number']}")
+                st.markdown(f"Customer: {order['customer_name']}")
+            
+            with col2:
+                st.markdown(f"Date: {order['date']}")
+                st.markdown(f"Delivery: {order['delivery_method']}")
+            
+            with col3:
+                st.markdown(f"Products: {order['product_name']}")
+                st.markdown(f"Total: **${order['total_price']:.2f}**")
+            
+            with col4:
+                if st.button("View", key=f"view_{order['order_number']}"):
+                    st.session_state.viewing_order = order['order_number']
+                    st.rerun()
+            
+            st.markdown('</div>', unsafe_allow_html=True)
+
+if __name__ == "__main__":
+    main()
