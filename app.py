@@ -1380,11 +1380,30 @@ def show_dashboard():
     """Display main dashboard with key metrics and charts"""
     st.markdown("## 📊 Tea Shop Dashboard")
     
-    # Load data
-    sales_df = dm.get_stock_out()
-    stock_df = dm.get_stock_in()
-    products_df = dm.get_products()
-    wastage_df = dm.get_wastage()
+    # Load data with error handling
+    try:
+        sales_df = dm.get_stock_out()
+    except Exception as e:
+        sales_df = pd.DataFrame()
+        print(f"Error loading sales data: {str(e)}")
+    
+    try:
+        stock_df = dm.get_stock_in()
+    except Exception as e:
+        stock_df = pd.DataFrame()
+        print(f"Error loading stock data: {str(e)}")
+    
+    try:
+        products_df = dm.get_products()
+    except Exception as e:
+        products_df = pd.DataFrame()
+        print(f"Error loading products data: {str(e)}")
+    
+    try:
+        wastage_df = dm.get_wastage()
+    except Exception as e:
+        wastage_df = pd.DataFrame()
+        print(f"Error loading wastage data: {str(e)}")
     
     if sales_df.empty:
         st.info("No sales data available yet. Begin by adding sales orders.")
@@ -1395,6 +1414,8 @@ def show_dashboard():
     total_orders = sales_df['order_number'].nunique()
     total_customers = sales_df['customer_name'].nunique()
     total_products_sold = sales_df['quantity'].sum()
+    
+    # Rest of the function remains the same...
     
     # Key performance metrics
     st.markdown("### Key Metrics")
